@@ -1,0 +1,35 @@
+PODS:
+  - QBIndicatorButton (0.1.3)
+  - SMCloudServices (1.5.1):
+    - StarIO_Extension
+  - StarIO (2.8.2)
+  - StarIO_Extension (1.15.0):
+    - StarIO
+  - StarIODeviceSetting (1.0.0):
+    - StarIO
+
+DEPENDENCIES:
+  - QBIndicatorButton
+  - SMCloudServices
+  - StarIO
+  - StarIO_Extension
+  - StarIODeviceSetting
+
+SPEC REPOS:
+  trunk:
+    - QBIndicatorButton
+    - SMCloudServices
+    - StarIO
+    - StarIO_Extension
+    - StarIODeviceSetting
+
+SPEC CHECKSUMS:
+  QBIndicatorButton: b8549d4a2dcee9acc5b1a8841be8b05818a2b5dd
+  SMCloudServices: d31c07b85289d68db7d0ada0b91fb5a1c078e694
+  StarIO: e1d416e563e34fd77f94de779913618f6aac8972
+  StarIO_Extension: 0484b9f19869e29f6e875060a543243f14153ba4
+  StarIODeviceSetting: d07f79ebdfe378c62f6039ead040e61442606e31
+
+PODFILE CHECKSUM: 6ced907500c3f5c6f9f278ebf1e39804a954b770
+
+COCOAPODS: 1.10.1
