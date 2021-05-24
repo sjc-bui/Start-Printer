@@ -20,10 +20,16 @@ class ViewController: UIViewController {
         printerBtn.touch({ btn in
             btn.start { [weak self] in
                 guard let self = self else { return }
-                self.printSample()
-                btn.stop {
-                    print(prettyLog())
+                self.printSample {
+                    btn.stop {
+                        print("🟢 Success!")
+                    }
+                } failureCompletion: {
+                    btn.stop {
+                        print("❌ Error appear, please try again!")
+                    }
                 }
+
             }
         }, for: .touchUpInside)
     }
@@ -62,7 +68,7 @@ class ViewController: UIViewController {
         return portArray.first?.portName
     }
 
-    @objc func printSample() {
+    private func printSample(successCompletion: (() -> Void)?, failureCompletion: (() -> Void)?) {
         let portName = searchPrinter()
 
         guard let portName = portName else {
@@ -73,6 +79,8 @@ class ViewController: UIViewController {
         let address = "愛知県名古屋市中区栄２丁目３−１ 名古屋広小路ビルヂング 11F"
 
         getLoc(from: address) { coor in
+            var success: Bool = false
+
             let lat = coor?.latitude
             let long = coor?.longitude
 
@@ -102,31 +110,54 @@ class ViewController: UIViewController {
                         break
                     }
 
+                    let startDate: Date = Date()
+
                     var total: UInt32 = 0
+
                     while total < UInt32(commands.count) {
                         var written: UInt32 = 0
                         try port.write(writeBuffer: commandsArray, offset: total, size: UInt32(commands.count) - total, numberOfBytesWritten: &written)
                         total += written
+
+                        if Date().timeIntervalSince(startDate) >= 30.0 {
+                            break
+                        }
                     }
                     if total < UInt32(commands.count) {
                         break
                     }
 
-                    try port.beginCheckedBlock(starPrinterStatus: &printerStatus, level: 2)
+                    try port.endCheckedBlock(starPrinterStatus: &printerStatus, level: 2)
 
                     if (printerStatus.offline == sm_true) {
                         print("printer offline.")
                         break
                     }
 
-                    print("print success!")
+                    success = true
+                    self.msg(message: "print success!")
                     break
                 } catch let error as NSError {
                     print(error)
+                    success = false
+                    self.msg(message: "\(error)")
                     break
                 }
             }
+
+            if success {
+                successCompletion?()
+            } else {
+                failureCompletion?()
+            }
         }
+    }
+
+    func msg(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        let action = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alert.addAction(action)
+        self.present(alert, animated: true, completion: nil)
     }
 
     func createHoldPrintData(address: String, lat: CLLocationDegrees, long: CLLocationDegrees) -> Data {
@@ -145,7 +176,7 @@ class ViewController: UIViewController {
 
         builder.appendEmphasis(true)
 
-        builder.appendData(withMultipleHeight: "東京\n".data(using: String.Encoding.shiftJIS), height: 3)
+        builder.appendData(withMultipleHeight: "東京\n".data(using: String.Encoding.shiftJIS), height: 2)
 
         builder.appendData(withMultipleHeight: "小平市\n".data(using: String.Encoding.shiftJIS), height: 2)
 
