@@ -76,7 +76,7 @@ class ViewController: UIViewController {
             return
         }
 
-        let address = "愛知県名古屋市中区栄２丁目３−１ 名古屋広小路ビルヂング 11F"
+        let address = "愛知県名古屋市中区大須１丁目２１"
 
         getLoc(from: address) { coor in
             var success: Bool = false
@@ -84,10 +84,7 @@ class ViewController: UIViewController {
             let lat = coor?.latitude
             let long = coor?.longitude
 
-            guard lat != 0,
-                  long != 0 else { return }
-
-            let commands = self.createHoldPrintData(address: address, lat: lat!, long: long!)
+            let commands = self.createHoldPrintData(address: address, lat: lat ?? 0, long: long ?? 0)
             var commandsArray: [UInt8] = [UInt8](repeating: 0, count: commands.count)
             commands.copyBytes(to: &commandsArray, count: commands.count)
 
@@ -135,12 +132,10 @@ class ViewController: UIViewController {
                     }
 
                     success = true
-                    self.msg(message: "print success!")
                     break
                 } catch let error as NSError {
                     print(error)
                     success = false
-                    self.msg(message: "\(error)")
                     break
                 }
             }
@@ -215,11 +210,12 @@ class ViewController: UIViewController {
 
         builder.appendAlignment(SCBAlignmentPosition.center)
 
-        let link = "https://maps.google.com/?q=@\(lat),\(long)"
-        let qrlink: Data = link.data(using: String.Encoding.ascii)!
-        builder.appendUnitFeed(12)
-
-        builder.appendQrCodeData(qrlink, model: SCBQrCodeModel.no2, level: SCBQrCodeLevel.Q, cell: 10)
+        if lat != 0 && long != 0 {
+            let link = "https://maps.google.com/?q=@\(lat),\(long)"
+            let qrlink: Data = link.data(using: String.Encoding.ascii)!
+            builder.appendUnitFeed(12)
+            builder.appendQrCodeData(qrlink, model: SCBQrCodeModel.no2, level: SCBQrCodeLevel.Q, cell: 10)
+        }
 
         builder.appendCutPaper(SCBCutPaperAction.partialCutWithFeed)
 
