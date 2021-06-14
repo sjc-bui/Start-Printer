@@ -7,6 +7,7 @@
 
 import UIKit
 import QBIndicatorButton
+import CoreLocation
 
 class ViewController: UIViewController {
 
@@ -17,13 +18,32 @@ class ViewController: UIViewController {
 
         printerBtn.animatedScale = 0.95
         printerBtn.touch({ btn in
-            btn.start {
-                self.printSample()
-                btn.stop {
-                    print(prettyLog())
+            btn.start { [weak self] in
+                guard let self = self else { return }
+                self.printSample {
+                    btn.stop {
+                        print("🟢 Success!")
+                    }
+                } failureCompletion: {
+                    btn.stop {
+                        print("❌ Error appear, please try again!")
+                    }
                 }
+
             }
         }, for: .touchUpInside)
+    }
+
+    func getLoc(from address: String, completion: @escaping (_ loc: CLLocationCoordinate2D?) -> Void) {
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(address) { placemarks, err in
+            guard let placemarks = placemarks,
+                  let location = placemarks.first?.location?.coordinate else {
+                completion(nil)
+                return
+            }
+            completion(location)
+        }
     }
 
     func searchPrinter() -> String? {
@@ -48,7 +68,7 @@ class ViewController: UIViewController {
         return portArray.first?.portName
     }
 
-    @objc func printSample() {
+    private func printSample(successCompletion: (() -> Void)?, failureCompletion: (() -> Void)?) {
         let portName = searchPrinter()
 
         guard let portName = portName else {
@@ -56,56 +76,86 @@ class ViewController: UIViewController {
             return
         }
 
-        let commands = createHoldPrintData()
-        var commandsArray: [UInt8] = [UInt8](repeating: 0, count: commands.count)
-        commands.copyBytes(to: &commandsArray, count: commands.count)
+        let address = "愛知県名古屋市中区大須１丁目２１"
 
-        while true {
-            var port: SMPort
+        getLoc(from: address) { coor in
+            var success: Bool = false
 
-            do {
-                port = try SMPort.getPort(portName: portName, portSettings: "", ioTimeoutMillis: 10000)
+            let lat = coor?.latitude
+            let long = coor?.longitude
 
-                defer {
-                    SMPort.release(port)
-                }
+            let commands = self.createHoldPrintData(address: address, lat: lat ?? 0, long: long ?? 0)
+            var commandsArray: [UInt8] = [UInt8](repeating: 0, count: commands.count)
+            commands.copyBytes(to: &commandsArray, count: commands.count)
 
-                var printerStatus: StarPrinterStatus_2 = StarPrinterStatus_2()
+            while true {
+                var port: SMPort
 
-                try port.beginCheckedBlock(starPrinterStatus: &printerStatus, level: 2)
+                do {
+                    port = try SMPort.getPort(portName: portName, portSettings: "", ioTimeoutMillis: 10000)
 
-                if (printerStatus.offline == sm_true) {
-                    print("printer offline.")
+                    defer {
+                        SMPort.release(port)
+                    }
+
+                    var printerStatus: StarPrinterStatus_2 = StarPrinterStatus_2()
+
+                    try port.beginCheckedBlock(starPrinterStatus: &printerStatus, level: 2)
+
+                    if (printerStatus.offline == sm_true) {
+                        print("printer offline.")
+                        break
+                    }
+
+                    let startDate: Date = Date()
+
+                    var total: UInt32 = 0
+
+                    while total < UInt32(commands.count) {
+                        var written: UInt32 = 0
+                        try port.write(writeBuffer: commandsArray, offset: total, size: UInt32(commands.count) - total, numberOfBytesWritten: &written)
+                        total += written
+
+                        if Date().timeIntervalSince(startDate) >= 30.0 {
+                            break
+                        }
+                    }
+                    if total < UInt32(commands.count) {
+                        break
+                    }
+
+                    try port.endCheckedBlock(starPrinterStatus: &printerStatus, level: 2)
+
+                    if (printerStatus.offline == sm_true) {
+                        print("printer offline.")
+                        break
+                    }
+
+                    success = true
+                    break
+                } catch let error as NSError {
+                    print(error)
+                    success = false
                     break
                 }
+            }
 
-                var total: UInt32 = 0
-                while total < UInt32(commands.count) {
-                    var written: UInt32 = 0
-                    try port.write(writeBuffer: commandsArray, offset: total, size: UInt32(commands.count) - total, numberOfBytesWritten: &written)
-                    total += written
-                }
-                if total < UInt32(commands.count) {
-                    break
-                }
-
-                try port.beginCheckedBlock(starPrinterStatus: &printerStatus, level: 2)
-
-                if (printerStatus.offline == sm_true) {
-                    print("printer offline.")
-                    break
-                }
-
-                print("print success!")
-                break
-            } catch let error as NSError {
-                print(error)
-                break
+            if success {
+                successCompletion?()
+            } else {
+                failureCompletion?()
             }
         }
     }
 
-    func createHoldPrintData() -> Data {
+    func msg(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        let action = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alert.addAction(action)
+        self.present(alert, animated: true, completion: nil)
+    }
+
+    func createHoldPrintData(address: String, lat: CLLocationDegrees, long: CLLocationDegrees) -> Data {
 
         let builder: ISCBBuilder = StarIoExt.createCommandBuilder(StarIoExtEmulation.starLine)
 
@@ -121,9 +171,9 @@ class ViewController: UIViewController {
 
         builder.appendEmphasis(true)
 
-        builder.appendData(withMultipleHeight: "スター電機\n".data(using: String.Encoding.shiftJIS), height: 3)
+        builder.appendData(withMultipleHeight: "東京\n".data(using: String.Encoding.shiftJIS), height: 2)
 
-        builder.appendData(withMultipleHeight: "修理報告書　兼領収書\n".data(using: String.Encoding.shiftJIS), height: 2)
+        builder.appendData(withMultipleHeight: "小平市\n".data(using: String.Encoding.shiftJIS), height: 2)
 
         builder.appendEmphasis(false)
 
@@ -134,10 +184,9 @@ class ViewController: UIViewController {
             "発行日時：YYYY年MM月DD日HH時MM分\n" +
             "TEL：054-347-XXXX\n" +
             "\n" +
-            "           ｲｹﾆｼ  ｼｽﾞｺ   ｻﾏ\n" +
-            "　お名前：池西　静子　様\n" +
-            "　御住所：静岡市清水区七ツ新屋\n" +
-            "　　　　　５３６番地\n" +
+            "           **   ｻﾏ\n" +
+            "　お名前：**　様\n" +
+            "　御住所：\(address)\n" +
             "　伝票番号：No.12345-67890\n" +
             "\n" +
             "　この度は修理をご用命頂き有難うございます。\n" +
@@ -148,7 +197,7 @@ class ViewController: UIViewController {
             "制御基板　          　  1      10,000     配達\n" +
             "操作スイッチ            1       3,800     配達\n" +
             "パネル　　          　  1       2,000     配達\n" +
-            "技術料　          　　  1      150,000\n" +
+            "技術料　          　　  1     150,000\n" +
             "出張費用　　            1       5,000\n" +
             "------------------------------------------------\n" +
             "\n" +
@@ -160,17 +209,13 @@ class ViewController: UIViewController {
             "\n").data(using: String.Encoding.shiftJIS))
 
         builder.appendAlignment(SCBAlignmentPosition.center)
-//
-//        builder.appendUnitFeed(32)
-//        let otherDataUpcE: Data = "0123455".data(using: String.Encoding.ascii)!
-//        builder.append("*0123455*\n".data(using: String.Encoding.ascii))
-//        builder.appendBarcodeData(otherDataUpcE, symbology: SCBBarcodeSymbology.code39, width: SCBBarcodeWidth.mode1, height: 40, hri: true)
 
-        let link: Data = "https://www.star-m.jp/".data(using: String.Encoding.ascii)!
-        builder.appendUnitFeed(12)
-
-        //builder.append("**Star HomePage**\n".data(using: String.Encoding.ascii))
-        builder.appendQrCodeData(link, model: SCBQrCodeModel.no2, level: SCBQrCodeLevel.Q, cell: 10)
+        if lat != 0 && long != 0 {
+            let link = "https://maps.google.com/?q=@\(lat),\(long)"
+            let qrlink: Data = link.data(using: String.Encoding.ascii)!
+            builder.appendUnitFeed(12)
+            builder.appendQrCodeData(qrlink, model: SCBQrCodeModel.no2, level: SCBQrCodeLevel.Q, cell: 10)
+        }
 
         builder.appendCutPaper(SCBCutPaperAction.partialCutWithFeed)
 
