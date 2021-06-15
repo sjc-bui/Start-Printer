@@ -157,64 +157,67 @@ class ViewController: UIViewController {
   }
 
   func createHoldPrintData(address: String, lat: CLLocationDegrees, long: CLLocationDegrees) -> Data {
+    let logo: UIImage = UIImage(named: "StarLogoImage")!
 
-      let builder: ISCBBuilder = StarIoExt.createCommandBuilder(StarIoExtEmulation.starLine)
+    let builder: ISCBBuilder = StarIoExt.createCommandBuilder(StarIoExtEmulation.starLine)
 
-      builder.beginDocument()
+    builder.beginDocument()
 
-      builder.append(SCBCodePageType.CP932)
+    builder.append(SCBCodePageType.CP932)
 
-      builder.append(SCBInternationalType.japan)
+    builder.append(SCBInternationalType.japan)
 
-      builder.appendCharacterSpace(0)
+    builder.appendCharacterSpace(0)
 
-      builder.appendAlignment(SCBAlignmentPosition.center)
+    builder.appendAlignment(SCBAlignmentPosition.center)
 
-      builder.appendEmphasis(true)
+    builder.appendEmphasis(true)
 
-      builder.appendData(withMultipleHeight: "領収書\n".data(using: String.Encoding.shiftJIS), height: 2)
+//    builder.appendData(withMultipleHeight: "領収書\n".data(using: String.Encoding.shiftJIS), height: 2)
+//    builder.appendAlignment(SCBAlignmentPosition.center)
+    builder.appendBitmap(withAlignment: logo, diffusion: true, position: .center)
 
-      builder.appendEmphasis(false)
+    builder.appendEmphasis(false)
 
-      builder.appendAlignment(SCBAlignmentPosition.left)
+    builder.appendAlignment(SCBAlignmentPosition.left)
 
-      builder.append((
-      "half-width chars = 48\n" +
-      "var width:  [Int] = [14, 11, 22]\n" +
-      "var width2: [Int] = [3 , 20, 22]\n" +
-      "------------------------------------------------\n" +
-      "1 フライポテト\n" +
-      "  ソース\n" +
-      "  ふりかけ(+50円)\n" +
-      printText(price: 1510, quantity: 2, width: width)    +
-      "9 うなぎ\n" +
-      "  ソース\n" +
-      printText(price: 190000, quantity: 100, width: width)    +
-      "9 うなぎ\n" +
-      "  みそ\n" +
-      printText(price: 999990, quantity: 1000, width: width)    +
-      "\n").data(using: String.Encoding.shiftJIS))
+    builder.append((
+    "half-width chars = 48\n" +
+    "var width:  [Int] = [14, 11, 22]\n" +
+    "var width2: [Int] = [3 , 20, 22]\n" +
+    "------------------------------------------------\n" +
+    "1 フライポテト\n" +
+    "  ソース\n" +
+    "  ふりかけ(+50円)\n" +
+    printText(price: 1510, quantity: 2, width: width)    +
+    "9 うなぎ\n" +
+    "  ソース\n" +
+    printText(price: 190000, quantity: 100, width: width)    +
+    "9 うなぎ\n" +
+    "  みそ\n" +
+    printText(price: 999990, quantity: 1000, width: width)    +
+    "\n").data(using: String.Encoding.shiftJIS))
 
-      builder.appendAlignment(SCBAlignmentPosition.right)
-      builder.append((
-      printTotal(quantity: 99999, total: 9999999, width: width2) +
+    builder.appendAlignment(SCBAlignmentPosition.right)
+    builder.append((
+    printTotal(quantity: 99999, total: 9999999, width: width2) +
 //      printTotal(quantity: 9999, total: 9, width: width2) +
 //      printTotal(quantity: 999, total: 230790, width: width2) +
 //      printTotal(quantity: 89, total: 2099, width: width2) +
 //      printTotal(quantity: 9, total: 20, width: width2) +
-      "\n").data(using: String.Encoding.shiftJIS))
+    "\n").data(using: String.Encoding.shiftJIS))
 
-      builder.appendAlignment(SCBAlignmentPosition.left)
-      builder.append((
-      "================================================\n" +
-      "＜税抜金額＞====================================\n" +
-      "<税抜金額>======================================\n" +
-      "＜消費税額（ 8％）＞============================\n" +
-      "＜消費税額(10％)＞==============================\n" +
-      "〈消費税額（10％）〉============================\n" +
-      "\n").data(using: String.Encoding.shiftJIS))
+    builder.appendAlignment(SCBAlignmentPosition.left)
+    builder.append((
+    "================================================\n" +
+    "＜税抜金額＞====================================\n" +
+    "<税抜金額>======================================\n" +
+    "＜消費税額（ 8％）＞============================\n" +
+    "＜消費税額(10％)＞==============================\n" +
+    "〈消費税額（10％）〉============================\n" +
+    "\n").data(using: String.Encoding.shiftJIS))
 
-      builder.appendAlignment(SCBAlignmentPosition.center)
+    builder.appendAlignment(SCBAlignmentPosition.center)
 
 //      if lat != 0 && long != 0 {
 //          let link = "https://maps.google.com/?q=@\(lat),\(long)"
@@ -223,11 +226,11 @@ class ViewController: UIViewController {
 //          builder.appendQrCodeData(qrlink, model: SCBQrCodeModel.no2, level: SCBQrCodeLevel.Q, cell: 10)
 //      }
 
-      builder.appendCutPaper(SCBCutPaperAction.partialCutWithFeed)
+    builder.appendCutPaper(SCBCutPaperAction.partialCutWithFeed)
 
-      builder.endDocument()
+    builder.endDocument()
 
-      return builder.commands.copy() as! Data
+    return builder.commands.copy() as! Data
   }
 
   func numFormat(num: Int, type: Type) -> String {
