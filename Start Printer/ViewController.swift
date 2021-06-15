@@ -192,19 +192,25 @@ class ViewController: UIViewController {
       "9 うなぎ\n" +
       "  みそ\n" +
       printText(price: 999990, quantity: 1000, width: width)    +
-      printText(price: 99, quantity: 111, width: width)    +
-      printText(price: 1, quantity: 11111, width: width)    +
-      "================================================\n" +
       "\n").data(using: String.Encoding.shiftJIS))
 
       builder.appendAlignment(SCBAlignmentPosition.right)
       builder.append((
       printTotal(quantity: 99999, total: 9999999, width: width2) +
-      printTotal(quantity: 9999, total: 9, width: width2) +
-      printTotal(quantity: 999, total: 230790, width: width2) +
-      printTotal(quantity: 89, total: 2099, width: width2) +
-      printTotal(quantity: 9, total: 20, width: width2) +
+//      printTotal(quantity: 9999, total: 9, width: width2) +
+//      printTotal(quantity: 999, total: 230790, width: width2) +
+//      printTotal(quantity: 89, total: 2099, width: width2) +
+//      printTotal(quantity: 9, total: 20, width: width2) +
+      "\n").data(using: String.Encoding.shiftJIS))
+
+      builder.appendAlignment(SCBAlignmentPosition.left)
+      builder.append((
       "================================================\n" +
+      "＜税抜金額＞====================================\n" +
+      "<税抜金額>======================================\n" +
+      "＜消費税額（ 8％）＞============================\n" +
+      "＜消費税額(10％)＞==============================\n" +
+      "〈消費税額（10％）〉============================\n" +
       "\n").data(using: String.Encoding.shiftJIS))
 
       builder.appendAlignment(SCBAlignmentPosition.center)
