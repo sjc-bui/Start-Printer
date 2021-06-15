@@ -179,21 +179,31 @@ class ViewController: UIViewController {
 
       builder.append((
       "half-width chars = 48\n" +
-      "var width: [Int] = [14, 11, 22]\n" +
+      "var width:  [Int] = [14, 11, 22]\n" +
+      "var width2: [Int] = [3 , 20, 22]\n" +
       "------------------------------------------------\n" +
       "1 フライポテト\n" +
       "  ソース\n" +
       "  ふりかけ(+50円)\n" +
-      "------------------------------------------------\n" +
-      printText(price: 15610, quantity: 2, width: width)    +
-      printText(price: 190000, quantity: 1, width: width)    +
-      printText(price: 999990, quantity: 1, width: width)    +
+      printText(price: 1510, quantity: 2, width: width)    +
+      "9 うなぎ\n" +
+      "  ソース\n" +
+      printText(price: 190000, quantity: 100, width: width)    +
+      "9 うなぎ\n" +
+      "  みそ\n" +
+      printText(price: 999990, quantity: 1000, width: width)    +
       printText(price: 99, quantity: 111, width: width)    +
       printText(price: 1, quantity: 11111, width: width)    +
-      "　    \\190,000         2点              \\380,000\n" +
-      "　 \\999990,000  22222222点      \\219,219,780,000\n" +
-      "　         \\99       211点               \\20,889\n" +
-      "　          \\1        19点                   \\19\n" +
+      "================================================\n" +
+      "\n").data(using: String.Encoding.shiftJIS))
+
+      builder.appendAlignment(SCBAlignmentPosition.right)
+      builder.append((
+      printTotal(quantity: 99999, total: 9999999, width: width2) +
+      printTotal(quantity: 9999, total: 9, width: width2) +
+      printTotal(quantity: 999, total: 230790, width: width2) +
+      printTotal(quantity: 89, total: 2099, width: width2) +
+      printTotal(quantity: 9, total: 20, width: width2) +
       "================================================\n" +
       "\n").data(using: String.Encoding.shiftJIS))
 
@@ -232,6 +242,18 @@ class ViewController: UIViewController {
     let secondCol = repeatElement(" ", count: width[1] - quantityStr.count) + "\(quantityStr)"
     let thirdCol  = repeatElement(" ", count: width[2] - totalStr.count) + "\(totalStr)"
     return "\(firstCol)\(secondCol)\(thirdCol)\n"
+  }
+  var width2: [Int] = [3, 20, 22]
+  func printTotal(quantity: Int, total: Int, width: [Int]) -> String {
+    let quantityStr = numFormat(num: quantity, type: .quantity)
+    let totalStr = numFormat(num: (total), type: .price)
+    let secondCol = repeatElement(" ", count: width[1] - quantityStr.count) + "\(quantityStr)"
+    let thirdCol  = repeatElement(" ", count: width[2] - totalStr.count) + "\(totalStr)"
+    return " 小計\(secondCol)\(thirdCol)\n"
+  }
+
+  func concatStr() {
+    
   }
 }
 
