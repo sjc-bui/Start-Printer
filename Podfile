@@ -10,6 +10,6 @@ target 'Start Printer' do
   pod 'SMCloudServices'
   pod 'StarIODeviceSetting'
   pod 'QBIndicatorButton'
-  pod 'SwiftyTextTable'
+  pod 'QBToast'
 
 end
