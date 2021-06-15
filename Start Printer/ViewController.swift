@@ -12,6 +12,7 @@ import CoreLocation
 class ViewController: UIViewController {
 
   @IBOutlet weak var printerBtn: QBIndicatorButton!
+  public var space = " "
 
   override func viewDidLoad() {
       super.viewDidLoad()
@@ -244,22 +245,18 @@ class ViewController: UIViewController {
     let quantityStr = numFormat(num: quantity, type: .quantity)
     let totalStr = numFormat(num: (price * quantity), type: .price)
 
-    let firstCol  = repeatElement(" ", count: width[0] - priceStr.count) + "\(priceStr)"
-    let secondCol = repeatElement(" ", count: width[1] - quantityStr.count) + "\(quantityStr)"
-    let thirdCol  = repeatElement(" ", count: width[2] - totalStr.count) + "\(totalStr)"
+    let firstCol  = repeatElement(space, count: width[0] - priceStr.count).joined() + priceStr
+    let secondCol = repeatElement(space, count: width[1] - quantityStr.count).joined() + quantityStr
+    let thirdCol  = repeatElement(space, count: width[2] - totalStr.count).joined() + totalStr
     return "\(firstCol)\(secondCol)\(thirdCol)\n"
   }
-  var width2: [Int] = [3, 20, 22]
+  var width2: [Int] = [20, 22]
   func printTotal(quantity: Int, total: Int, width: [Int]) -> String {
     let quantityStr = numFormat(num: quantity, type: .quantity)
     let totalStr = numFormat(num: (total), type: .price)
-    let secondCol = repeatElement(" ", count: width[1] - quantityStr.count) + "\(quantityStr)"
-    let thirdCol  = repeatElement(" ", count: width[2] - totalStr.count) + "\(totalStr)"
+    let secondCol = repeatElement(space, count: width[0] - quantityStr.count).joined() + quantityStr
+    let thirdCol  = repeatElement(space, count: width[1] - totalStr.count).joined() + totalStr
     return " 小計\(secondCol)\(thirdCol)\n"
-  }
-
-  func concatStr() {
-    
   }
 }
 
